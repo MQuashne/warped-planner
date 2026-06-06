@@ -223,6 +223,11 @@ export default function App() {
         {/* ══════════════ GRID TAB ══════════════ */}
         {tab==='grid'&&(
           <div>
+            {/* Shared datalist — all band inputs reference this for autocomplete */}
+            <datalist id="band-options">
+              {allBands.map(b => <option key={b} value={b} />)}
+            </datalist>
+
             <div style={{fontSize:'12px',color:'#555',marginBottom:'14px',lineHeight:'1.6'}}>
               <strong style={{color:'#888'}}>Morning-of:</strong> select a stage, then for each hour block that has a band, enter the exact minutes and band name.
             </div>
@@ -275,7 +280,7 @@ export default function App() {
                         style={{width:'26px',background:'transparent',border:'none',padding:'6px 2px',fontSize:'12px',
                           color:filled?'#aaa':'#2a2a4a',outline:'none',textAlign:'center',fontFamily:'monospace'}} />
                       <div style={{width:'1px',background:'#1a1a2e',alignSelf:'stretch',margin:'0 2px'}}/>
-                      <input value={cell.band} onChange={e=>setCell(activeStage,h,'band',e.target.value)}
+                      <input list="band-options" value={cell.band} onChange={e=>setCell(activeStage,h,'band',e.target.value)}
                         placeholder={filled?'':' Band name...'}
                         style={{flex:1,background:'transparent',border:'none',padding:'6px 8px',fontSize:'13px',
                           color:tc?.color||'white',outline:'none'}} />
