@@ -12,7 +12,6 @@ const STAGE_COLOR = {
   'EAGLE':       '#be185d',
 };
 
-// Light tinted backgrounds per stage for schedule rows
 const STAGE_TINT = {
   'VANS':        {bg:'#eff6ff', border:'#bfdbfe'},
   'OFF THE WALL':{bg:'#f0fdf4', border:'#bbf7d0'},
@@ -24,11 +23,11 @@ const STAGE_TINT = {
 
 // Light-mode tier config: colored text/borders, pale tinted backgrounds
 const TIER = {
-  1: {label:'T1', name:'Must See',    color:'#dc2626', bg:'#fef2f2', border:'#fca5a5', dot:'🔴'},
-  2: {label:'T2', name:'Want to See', color:'#ea580c', bg:'#fff7ed', border:'#fdba74', dot:'🟠'},
-  3: {label:'T3', name:'Nice to See', color:'#b45309', bg:'#fffbeb', border:'#fcd34d', dot:'🟡'},
-  4: {label:'T4', name:'If Nearby',   color:'#15803d', bg:'#f0fdf4', border:'#86efac', dot:'🟢'},
-  5: {label:'?',  name:'Unrated',     color:'#6b7280', bg:'#f9fafb', border:'#e5e7eb', dot:'⚪'},
+  1: {label:'T1', name:'Must See',    color:'#dc2626', bg:'#fef2f2', border:'#fca5a5', dot:'🔴', stars:'⭐⭐⭐⭐'},
+  2: {label:'T2', name:'Want to See', color:'#ea580c', bg:'#fff7ed', border:'#fdba74', dot:'🟠', stars:'⭐⭐⭐'},
+  3: {label:'T3', name:'Nice to See', color:'#b45309', bg:'#fffbeb', border:'#fcd34d', dot:'🟡', stars:'⭐⭐'},
+  4: {label:'T4', name:'If Nearby',   color:'#15803d', bg:'#f0fdf4', border:'#86efac', dot:'🟢', stars:'⭐'},
+  5: {label:'?',  name:'Unrated',     color:'#6b7280', bg:'#f9fafb', border:'#e5e7eb', dot:'⚪', stars:''},
 };
 
 // CSS vars baked in as a style object for the page
@@ -318,9 +317,9 @@ export default function App() {
                     </div>
                     <div style={{
                       display:'flex',alignItems:'center',flex:1,
-                      background:filled?(tc?tc.bg:'#f8faff'):C.inputBg,
+                      background:filled?(STAGE_TINT[activeStage]):C.inputBg,
                       borderRadius:'8px',overflow:'hidden',
-                      border:`1.5px solid ${filled?(tc?.border||STAGE_COLOR[activeStage]):C.border}`,
+                      border:`1.5px solid ${filled?(STAGE_COLOR[activeStage]):C.border}`,
                     }}>
                       <span style={{fontSize:'13px',color:C.textFaint,padding:'0 2px 0 8px',fontFamily:'monospace',userSelect:'none',lineHeight:'34px',flexShrink:0,fontWeight:'700'}}>
                         {h>12?h-12:h}:
@@ -332,8 +331,8 @@ export default function App() {
                       <input list="band-options" value={cell.band} onChange={e=>setCell(activeStage,h,'band',e.target.value)}
                         placeholder="Band name..."
                         style={{flex:1,background:'transparent',border:'none',padding:'7px 8px',fontSize:'14px',
-                          color:tc?tc.color:C.text,outline:'none',fontWeight:filled?'700':'400'}}/>
-                      {filled&&tc&&<span style={{fontSize:'11px',color:'white',background:tc.color,paddingRight:'7px',paddingLeft:'7px',fontWeight:'800',alignSelf:'stretch',display:'flex',alignItems:'center',flexShrink:0}}>{tc.label}</span>}
+                          color:STAGE_COLOR[activeStage],outline:'none',fontWeight:filled?'700':'400'}}/>
+                      {filled&&tc&&<span style={{fontSize:'11px',color:'white',background:STAGE_COLOR[activeStage],paddingRight:'7px',paddingLeft:'7px',fontWeight:'800',alignSelf:'stretch',display:'flex',alignItems:'center',flexShrink:0}}>{tc.stars}</span>}
                       {filled&&rv==='skip'&&<span style={{fontSize:'11px',color:'white',background:'#6b7280',paddingRight:'7px',paddingLeft:'7px',fontWeight:'800',alignSelf:'stretch',display:'flex',alignItems:'center',flexShrink:0}}>SKIP</span>}
                     </div>
                   </div>
@@ -495,14 +494,9 @@ export default function App() {
             </div>
 
             {!resetConfirm?(
-              <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
-                <button onClick={()=>{ clearGrid(); setTab('grid'); }} style={{width:'100%',padding:'12px',background:'#1d4ed8',border:'none',borderRadius:'10px',color:'white',cursor:'pointer',fontSize:'14px',fontWeight:'800',boxShadow:'0 2px 6px rgba(29,78,216,0.3)'}}>
-                  🌅 New Day — Clear Grid
-                </button>
-                <button onClick={()=>setResetConfirm(true)} style={{width:'100%',padding:'12px',background:C.cardBg,border:'2px solid #dc2626',borderRadius:'10px',color:'#dc2626',cursor:'pointer',fontSize:'14px',fontWeight:'700'}}>
-                  Reset All Saved Data
-                </button>
-              </div>
+              <button onClick={()=>setResetConfirm(true)} style={{width:'100%',padding:'12px',background:C.cardBg,border:'2px solid #dc2626',borderRadius:'10px',color:'#dc2626',cursor:'pointer',fontSize:'14px',fontWeight:'700'}}>
+                Reset All Saved Data
+              </button>
             ):(
               <div style={{background:C.cardBg,borderRadius:'10px',padding:'14px',border:`2px solid #dc2626`}}>
                 <div style={{textAlign:'center',color:'#dc2626',fontSize:'13px',marginBottom:'12px',fontWeight:'600'}}>Erase all ratings, grid data, and extras?</div>
@@ -658,11 +652,11 @@ function ScheduleView({schedule, viewMode, setViewMode, onRegenerate, onResolve}
             </div>
           )}
           {scheduled.map((set,i)=>{
-            const tcfg=getTierConfig(set.tier);
-            const stint=STAGE_TINT[set.stage]||{bg:'#f9fafb',border:'#e5e7eb'};
-            const scol=STAGE_COLOR[set.stage]||'#1d4ed8';
+            const cfg=getTierConfig(set.tier);
             const prev=scheduled[i-1];
             const gap=prev?set.startMin-prev.endMin:null;
+            const stint=STAGE_TINT[set.stage]||{bg:'#f9fafb',border:'#e5e7eb'};
+            const scol=STAGE_COLOR[set.stage]||'#1d4ed8';
             return(
               <div key={set.id}>
                 {gap!==null&&gap>=25&&(
@@ -678,15 +672,14 @@ function ScheduleView({schedule, viewMode, setViewMode, onRegenerate, onResolve}
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                     <div>
                       <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
-                        <span style={{fontSize:'15px'}}>{tcfg.dot}</span>
+                        <span style={{fontSize:'15px'}}>{cfg.stars}</span>
                         <span style={{fontWeight:'800',fontSize:'16px',color:C.text}}>{set.band}</span>
                       </div>
                       <div style={{fontSize:'12px',color:C.textMid,marginTop:'3px',paddingLeft:'21px',fontWeight:'600'}}>
-                        <span style={{color:scol,fontWeight:'800'}}>{set.stage}</span>
+                        <span style={{color:STAGE_COLOR[set.stage]||'#1d4ed8'}}>{set.stage}</span>
                         {' '}·{' '}{minToDisplay(set.startMin)} – {minToDisplay(set.endMin)}{' '}·{' '}~{set.duration}min
                       </div>
                     </div>
-                    <span style={{background:tcfg.color,color:'white',fontSize:'11px',padding:'3px 8px',borderRadius:'6px',fontWeight:'900',flexShrink:0,marginLeft:'8px'}}>{tcfg.label}</span>
                   </div>
                 </div>
               </div>
@@ -699,7 +692,7 @@ function ScheduleView({schedule, viewMode, setViewMode, onRegenerate, onResolve}
               {crossTierSkipped.map(({set,conflict})=>(
                 <div key={set.id} style={{display:'flex',alignItems:'center',gap:'8px',padding:'8px 12px',background:C.cardBg,borderRadius:'8px',marginBottom:'4px',border:`1px solid ${C.border}`,opacity:0.65}}>
                   <span style={{color:C.textFaint,fontSize:'15px'}}>✗</span>
-                  <span style={{fontSize:'13px',color:C.textMid,fontWeight:'600'}}>{set.band}</span>
+                  <span style={{fontSize:'13px',color:C.textMid,fontWeight:'600'}}>{set.band} {getTierConfig(set.tier).stars}</span>
                   <span style={{fontSize:'12px',color:C.textFaint}}>{set.stage} {minToDisplay(set.startMin)}</span>
                   <span style={{marginLeft:'auto',fontSize:'12px',color:C.textFaint}}>→ {conflict.sched.band}</span>
                 </div>
