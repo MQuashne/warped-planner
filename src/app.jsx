@@ -12,6 +12,16 @@ const STAGE_COLOR = {
   'EAGLE':       '#be185d',
 };
 
+// Light tinted backgrounds per stage for schedule rows
+const STAGE_TINT = {
+  'VANS':        {bg:'#eff6ff', border:'#bfdbfe'},
+  'OFF THE WALL':{bg:'#f0fdf4', border:'#bbf7d0'},
+  'GHOST':       {bg:'#f5f3ff', border:'#ddd6fe'},
+  'BEATBOX':     {bg:'#fefce8', border:'#fde68a'},
+  'VERIZON':     {bg:'#fff1f2', border:'#fecdd3'},
+  'EAGLE':       {bg:'#fdf4ff', border:'#f0abfc'},
+};
+
 // Light-mode tier config: colored text/borders, pale tinted backgrounds
 const TIER = {
   1: {label:'T1', name:'Must See',    color:'#dc2626', bg:'#fef2f2', border:'#fca5a5', dot:'🔴'},
@@ -485,9 +495,14 @@ export default function App() {
             </div>
 
             {!resetConfirm?(
-              <button onClick={()=>setResetConfirm(true)} style={{width:'100%',padding:'12px',background:C.cardBg,border:'2px solid #dc2626',borderRadius:'10px',color:'#dc2626',cursor:'pointer',fontSize:'14px',fontWeight:'700'}}>
-                Reset All Saved Data
-              </button>
+              <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+                <button onClick={()=>{ clearGrid(); setTab('grid'); }} style={{width:'100%',padding:'12px',background:'#1d4ed8',border:'none',borderRadius:'10px',color:'white',cursor:'pointer',fontSize:'14px',fontWeight:'800',boxShadow:'0 2px 6px rgba(29,78,216,0.3)'}}>
+                  🌅 New Day — Clear Grid
+                </button>
+                <button onClick={()=>setResetConfirm(true)} style={{width:'100%',padding:'12px',background:C.cardBg,border:'2px solid #dc2626',borderRadius:'10px',color:'#dc2626',cursor:'pointer',fontSize:'14px',fontWeight:'700'}}>
+                  Reset All Saved Data
+                </button>
+              </div>
             ):(
               <div style={{background:C.cardBg,borderRadius:'10px',padding:'14px',border:`2px solid #dc2626`}}>
                 <div style={{textAlign:'center',color:'#dc2626',fontSize:'13px',marginBottom:'12px',fontWeight:'600'}}>Erase all ratings, grid data, and extras?</div>
@@ -643,7 +658,9 @@ function ScheduleView({schedule, viewMode, setViewMode, onRegenerate, onResolve}
             </div>
           )}
           {scheduled.map((set,i)=>{
-            const cfg=getTierConfig(set.tier);
+            const tcfg=getTierConfig(set.tier);
+            const stint=STAGE_TINT[set.stage]||{bg:'#f9fafb',border:'#e5e7eb'};
+            const scol=STAGE_COLOR[set.stage]||'#1d4ed8';
             const prev=scheduled[i-1];
             const gap=prev?set.startMin-prev.endMin:null;
             return(
@@ -657,19 +674,19 @@ function ScheduleView({schedule, viewMode, setViewMode, onRegenerate, onResolve}
                     <div style={{flex:1,borderTop:`2px dashed #93c5fd`}}/>
                   </div>
                 )}
-                <div style={{background:cfg.bg,borderRadius:'10px',padding:'12px 14px',marginBottom:'6px',border:`1.5px solid ${cfg.border}`,borderLeft:`4px solid ${cfg.color}`,boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
+                <div style={{background:stint.bg,borderRadius:'10px',padding:'12px 14px',marginBottom:'6px',border:`1.5px solid ${stint.border}`,borderLeft:`4px solid ${scol}`,boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                     <div>
                       <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
-                        <span style={{fontSize:'15px'}}>{cfg.dot}</span>
+                        <span style={{fontSize:'15px'}}>{tcfg.dot}</span>
                         <span style={{fontWeight:'800',fontSize:'16px',color:C.text}}>{set.band}</span>
                       </div>
                       <div style={{fontSize:'12px',color:C.textMid,marginTop:'3px',paddingLeft:'21px',fontWeight:'600'}}>
-                        <span style={{color:STAGE_COLOR[set.stage]||'#1d4ed8'}}>{set.stage}</span>
+                        <span style={{color:scol,fontWeight:'800'}}>{set.stage}</span>
                         {' '}·{' '}{minToDisplay(set.startMin)} – {minToDisplay(set.endMin)}{' '}·{' '}~{set.duration}min
                       </div>
                     </div>
-                    <span style={{background:cfg.color,color:'white',fontSize:'11px',padding:'3px 8px',borderRadius:'6px',fontWeight:'900',flexShrink:0,marginLeft:'8px'}}>{cfg.label}</span>
+                    <span style={{background:tcfg.color,color:'white',fontSize:'11px',padding:'3px 8px',borderRadius:'6px',fontWeight:'900',flexShrink:0,marginLeft:'8px'}}>{tcfg.label}</span>
                   </div>
                 </div>
               </div>
