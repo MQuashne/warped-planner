@@ -23,10 +23,10 @@ const STAGE_TINT = {
 
 // Light-mode tier config: colored text/borders, pale tinted backgrounds
 const TIER = {
-  1: {label:'T1', name:'Must See',    color:'#6ebb66', bg:'#fef2f2', border:'#fca5a5', dot:'🔴', stars:'⭐⭐⭐⭐'},
-  2: {label:'T2', name:'Want to See', color:'#a335ee', bg:'#fff7ed', border:'#fdba74', dot:'🟠', stars:'⭐⭐⭐'},
-  3: {label:'T3', name:'Nice to See', color:'#8bc985', bg:'#fffbeb', border:'#fcd34d', dot:'🟡', stars:'⭐⭐'},
-  4: {label:'T4', name:'If Nearby',   color:'#8ad6a3', bg:'#f0fdf4', border:'#86efac', dot:'🟢', stars:'⭐'},
+  1: {label:'T1', name:'Must See',    color:'#dc2626', bg:'#fef2f2', border:'#fca5a5', dot:'🔴', stars:'⭐⭐⭐⭐'},
+  2: {label:'T2', name:'Want to See', color:'#ea580c', bg:'#fff7ed', border:'#fdba74', dot:'🟠', stars:'⭐⭐⭐'},
+  3: {label:'T3', name:'Nice to See', color:'#b45309', bg:'#fffbeb', border:'#fcd34d', dot:'🟡', stars:'⭐⭐'},
+  4: {label:'T4', name:'If Nearby',   color:'#15803d', bg:'#f0fdf4', border:'#86efac', dot:'🟢', stars:'⭐'},
   5: {label:'?',  name:'Unrated',     color:'#c5e4c2', bg:'#f9fafb', border:'#e5e7eb', dot:'⚪', stars:''},
 };
 
