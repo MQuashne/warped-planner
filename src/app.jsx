@@ -12,6 +12,7 @@ const STAGE_COLOR = {
   'EAGLE':       '#be185d',
 };
 
+// Light tinted backgrounds per stage for schedule rows
 const STAGE_TINT = {
   'VANS':        {bg:'#eff6ff', border:'#bfdbfe'},
   'OFF THE WALL':{bg:'#f0fdf4', border:'#bbf7d0'},
@@ -21,13 +22,23 @@ const STAGE_TINT = {
   'EAGLE':       {bg:'#fdf4ff', border:'#f0abfc'},
 };
 
+// Co-located stage pairs — alternate all day, zero travel time between them
+const STAGE_PAIRS = {
+  'VANS':        'OFF THE WALL',
+  'OFF THE WALL':'VANS',
+  'GHOST':       'BEATBOX',
+  'BEATBOX':     'GHOST',
+  'VERIZON':     'EAGLE',
+  'EAGLE':       'VERIZON',
+};
+
 // Light-mode tier config: colored text/borders, pale tinted backgrounds
 const TIER = {
-  1: {label:'T1', name:'Must See',    color:'#dc2626', bg:'#fef2f2', border:'#fca5a5', dot:'🔴', stars:'⭐⭐⭐⭐'},
-  2: {label:'T2', name:'Want to See', color:'#ea580c', bg:'#fff7ed', border:'#fdba74', dot:'🟠', stars:'⭐⭐⭐'},
-  3: {label:'T3', name:'Nice to See', color:'#b45309', bg:'#fffbeb', border:'#fcd34d', dot:'🟡', stars:'⭐⭐'},
-  4: {label:'T4', name:'If Nearby',   color:'#15803d', bg:'#f0fdf4', border:'#86efac', dot:'🟢', stars:'⭐'},
-  5: {label:'?',  name:'Unrated',     color:'#c5e4c2', bg:'#f9fafb', border:'#e5e7eb', dot:'⚪', stars:''},
+  1: {label:'T1', name:'Must See',    color:'#dc2626', bg:'#fef2f2', border:'#fca5a5', dot:'🔴'},
+  2: {label:'T2', name:'Want to See', color:'#ea580c', bg:'#fff7ed', border:'#fdba74', dot:'🟠'},
+  3: {label:'T3', name:'Nice to See', color:'#b45309', bg:'#fffbeb', border:'#fcd34d', dot:'🟡'},
+  4: {label:'T4', name:'If Nearby',   color:'#15803d', bg:'#f0fdf4', border:'#86efac', dot:'🟢'},
+  5: {label:'?',  name:'Unrated',     color:'#6b7280', bg:'#f9fafb', border:'#e5e7eb', dot:'⚪'},
 };
 
 // CSS vars baked in as a style object for the page
@@ -194,7 +205,7 @@ export default function App() {
       let cf=null;
       for(const sc of scheduled){
         const ov=Math.min(set.endMin,sc.endMin)-Math.max(set.startMin,sc.startMin);
-        const tr=set.stage!==sc.stage?travelMin:0;
+        const tr=(set.stage!==sc.stage&&STAGE_PAIRS[set.stage]!==sc.stage)?travelMin:0;
         const eff=ov>0?ov+tr:(-ov<tr?tr+ov:0);
         if(eff>conflictMin){cf={sched:sc,overlap:eff};break;}
       }
@@ -277,24 +288,28 @@ export default function App() {
               <strong>Morning-of:</strong> select a stage, then enter the exact minutes and band name for each occupied hour block.
             </div>
 
-            {/* Stage selector */}
-            <div style={{display:'flex',gap:'6px',marginBottom:'12px',overflowX:'auto',paddingBottom:'4px'}}>
-              {STAGES.map(s=>{
-                const count=HOURS.filter(h=>grid[s]?.[h]?.band?.trim()).length;
-                const active=activeStage===s;
-                return(
-                  <button key={s} onClick={()=>setActiveStage(s)} style={{
-                    padding:'7px 12px',borderRadius:'8px',border:`2px solid ${active?STAGE_COLOR[s]:C.border}`,
-                    cursor:'pointer',fontSize:'12px',fontWeight:'800',whiteSpace:'nowrap',flexShrink:0,
-                    background:active?STAGE_COLOR[s]:C.cardBg,
-                    color:active?'white':count>0?STAGE_COLOR[s]:C.textMute,
-                    position:'relative',boxShadow:active?'0 2px 6px rgba(0,0,0,0.15)':'none',
-                  }}>
-                    {s}
-                    {count>0&&!active&&<span style={{position:'absolute',top:'-5px',right:'-5px',background:STAGE_COLOR[s],color:'white',fontSize:'9px',fontWeight:'900',borderRadius:'10px',padding:'1px 5px',lineHeight:'1.4',boxShadow:'0 1px 3px rgba(0,0,0,0.2)'}}>{count}</span>}
-                  </button>
-                );
-              })}
+            {/* Stage selector — grouped by co-located pair */}
+            <div style={{display:'flex',gap:'8px',marginBottom:'12px',overflowX:'auto',paddingBottom:'4px',alignItems:'center'}}>
+              {[['VANS','OFF THE WALL'],['GHOST','BEATBOX'],['VERIZON','EAGLE']].map((pair,pi)=>(
+                <div key={pi} style={{display:'flex',gap:'3px',flexShrink:0,background:C.inputBg,borderRadius:'10px',padding:'3px',border:`1px solid ${C.border}`}}>
+                  {pair.map(s=>{
+                    const count=HOURS.filter(h=>grid[s]?.[h]?.band?.trim()).length;
+                    const active=activeStage===s;
+                    return(
+                      <button key={s} onClick={()=>setActiveStage(s)} style={{
+                        padding:'6px 10px',borderRadius:'7px',border:'none',
+                        cursor:'pointer',fontSize:'11px',fontWeight:'800',whiteSpace:'nowrap',flexShrink:0,
+                        background:active?STAGE_COLOR[s]:'transparent',
+                        color:active?'white':count>0?STAGE_COLOR[s]:C.textMute,
+                        position:'relative',boxShadow:active?'0 2px 6px rgba(0,0,0,0.15)':'none',
+                      }}>
+                        {s}
+                        {count>0&&!active&&<span style={{position:'absolute',top:'-5px',right:'-5px',background:STAGE_COLOR[s],color:'white',fontSize:'9px',fontWeight:'900',borderRadius:'10px',padding:'1px 4px',lineHeight:'1.4',boxShadow:'0 1px 3px rgba(0,0,0,0.2)'}}>{count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
 
             {/* Active stage slots */}
@@ -317,9 +332,9 @@ export default function App() {
                     </div>
                     <div style={{
                       display:'flex',alignItems:'center',flex:1,
-                      background:filled?(STAGE_TINT[activeStage]):C.inputBg,
+                      background:filled?(tc?tc.bg:'#f8faff'):C.inputBg,
                       borderRadius:'8px',overflow:'hidden',
-                      border:`1.5px solid ${filled?(STAGE_COLOR[activeStage]):C.border}`,
+                      border:`1.5px solid ${filled?(tc?.border||STAGE_COLOR[activeStage]):C.border}`,
                     }}>
                       <span style={{fontSize:'13px',color:C.textFaint,padding:'0 2px 0 8px',fontFamily:'monospace',userSelect:'none',lineHeight:'34px',flexShrink:0,fontWeight:'700'}}>
                         {h>12?h-12:h}:
@@ -331,8 +346,8 @@ export default function App() {
                       <input list="band-options" value={cell.band} onChange={e=>setCell(activeStage,h,'band',e.target.value)}
                         placeholder="Band name..."
                         style={{flex:1,background:'transparent',border:'none',padding:'7px 8px',fontSize:'14px',
-                          color:STAGE_COLOR[activeStage],outline:'none',fontWeight:filled?'700':'400'}}/>
-                      {filled&&tc&&<span style={{fontSize:'11px',color:'white',background:STAGE_COLOR[activeStage],paddingRight:'7px',paddingLeft:'7px',fontWeight:'800',alignSelf:'stretch',display:'flex',alignItems:'center',flexShrink:0}}>{tc.stars}</span>}
+                          color:tc?tc.color:C.text,outline:'none',fontWeight:filled?'700':'400'}}/>
+                      {filled&&tc&&<span style={{fontSize:'11px',color:'white',background:tc.color,paddingRight:'7px',paddingLeft:'7px',fontWeight:'800',alignSelf:'stretch',display:'flex',alignItems:'center',flexShrink:0}}>{tc.label}</span>}
                       {filled&&rv==='skip'&&<span style={{fontSize:'11px',color:'white',background:'#6b7280',paddingRight:'7px',paddingLeft:'7px',fontWeight:'800',alignSelf:'stretch',display:'flex',alignItems:'center',flexShrink:0}}>SKIP</span>}
                     </div>
                   </div>
@@ -494,9 +509,14 @@ export default function App() {
             </div>
 
             {!resetConfirm?(
-              <button onClick={()=>setResetConfirm(true)} style={{width:'100%',padding:'12px',background:C.cardBg,border:'2px solid #dc2626',borderRadius:'10px',color:'#dc2626',cursor:'pointer',fontSize:'14px',fontWeight:'700'}}>
-                Reset All Saved Data
-              </button>
+              <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+                <button onClick={()=>{ clearGrid(); setTab('grid'); }} style={{width:'100%',padding:'12px',background:'#1d4ed8',border:'none',borderRadius:'10px',color:'white',cursor:'pointer',fontSize:'14px',fontWeight:'800',boxShadow:'0 2px 6px rgba(29,78,216,0.3)'}}>
+                  🌅 New Day — Clear Grid
+                </button>
+                <button onClick={()=>setResetConfirm(true)} style={{width:'100%',padding:'12px',background:C.cardBg,border:'2px solid #dc2626',borderRadius:'10px',color:'#dc2626',cursor:'pointer',fontSize:'14px',fontWeight:'700'}}>
+                  Reset All Saved Data
+                </button>
+              </div>
             ):(
               <div style={{background:C.cardBg,borderRadius:'10px',padding:'14px',border:`2px solid #dc2626`}}>
                 <div style={{textAlign:'center',color:'#dc2626',fontSize:'13px',marginBottom:'12px',fontWeight:'600'}}>Erase all ratings, grid data, and extras?</div>
@@ -652,11 +672,11 @@ function ScheduleView({schedule, viewMode, setViewMode, onRegenerate, onResolve}
             </div>
           )}
           {scheduled.map((set,i)=>{
-            const cfg=getTierConfig(set.tier);
-            const prev=scheduled[i-1];
-            const gap=prev?set.startMin-prev.endMin:null;
+            const tcfg=getTierConfig(set.tier);
             const stint=STAGE_TINT[set.stage]||{bg:'#f9fafb',border:'#e5e7eb'};
             const scol=STAGE_COLOR[set.stage]||'#1d4ed8';
+            const prev=scheduled[i-1];
+            const gap=prev?set.startMin-prev.endMin:null;
             return(
               <div key={set.id}>
                 {gap!==null&&gap>=25&&(
@@ -672,14 +692,15 @@ function ScheduleView({schedule, viewMode, setViewMode, onRegenerate, onResolve}
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                     <div>
                       <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
-                        <span style={{fontSize:'15px'}}>{cfg.stars}</span>
+                        <span style={{fontSize:'15px'}}>{tcfg.dot}</span>
                         <span style={{fontWeight:'800',fontSize:'16px',color:C.text}}>{set.band}</span>
                       </div>
                       <div style={{fontSize:'12px',color:C.textMid,marginTop:'3px',paddingLeft:'21px',fontWeight:'600'}}>
-                        <span style={{color:STAGE_COLOR[set.stage]||'#1d4ed8'}}>{set.stage}</span>
+                        <span style={{color:scol,fontWeight:'800'}}>{set.stage}</span>
                         {' '}·{' '}{minToDisplay(set.startMin)} – {minToDisplay(set.endMin)}{' '}·{' '}~{set.duration}min
                       </div>
                     </div>
+                    <span style={{background:tcfg.color,color:'white',fontSize:'11px',padding:'3px 8px',borderRadius:'6px',fontWeight:'900',flexShrink:0,marginLeft:'8px'}}>{tcfg.label}</span>
                   </div>
                 </div>
               </div>
@@ -692,7 +713,7 @@ function ScheduleView({schedule, viewMode, setViewMode, onRegenerate, onResolve}
               {crossTierSkipped.map(({set,conflict})=>(
                 <div key={set.id} style={{display:'flex',alignItems:'center',gap:'8px',padding:'8px 12px',background:C.cardBg,borderRadius:'8px',marginBottom:'4px',border:`1px solid ${C.border}`,opacity:0.65}}>
                   <span style={{color:C.textFaint,fontSize:'15px'}}>✗</span>
-                  <span style={{fontSize:'13px',color:C.textMid,fontWeight:'600'}}>{set.band} {getTierConfig(set.tier).stars}</span>
+                  <span style={{fontSize:'13px',color:C.textMid,fontWeight:'600'}}>{set.band}</span>
                   <span style={{fontSize:'12px',color:C.textFaint}}>{set.stage} {minToDisplay(set.startMin)}</span>
                   <span style={{marginLeft:'auto',fontSize:'12px',color:C.textFaint}}>→ {conflict.sched.band}</span>
                 </div>
@@ -713,39 +734,42 @@ function ScheduleView({schedule, viewMode, setViewMode, onRegenerate, onResolve}
                 ))}
               </div>
             </div>
-            {STAGES.map(stage=>{
-              const sSets=allDisplay.filter(s=>s.stage===stage);
-              return(
-                <div key={stage} style={{display:'flex',alignItems:'center',marginBottom:'5px'}}>
-                  <div style={{width:'80px',flexShrink:0,fontSize:'10px',color:STAGE_COLOR[stage],fontWeight:'800',textAlign:'right',paddingRight:'8px',letterSpacing:'-0.3px'}}>{stage}</div>
-                  <div style={{flex:1,position:'relative',height:'28px',background:'#e5e7eb',borderRadius:'6px',overflow:'hidden',border:`1px solid ${C.border}`}}>
-                    {hrs.map(h=>(<div key={h} style={{position:'absolute',left:tleft(h*60),top:0,bottom:0,borderLeft:'1px solid #d1d5db',pointerEvents:'none'}}/>))}
-                    {sSets.map(set=>{
-                      const cfg=getTierConfig(set.tier);
-                      const short=set.band.length>14?set.band.slice(0,13)+'…':set.band;
-                      const alpha=set.inSched?1:set.pending?0.5:0.2;
-                      return(
-                        <div key={set.id+set.inSched}
-                          title={`${set.band} (${minToDisplay(set.startMin)}–${minToDisplay(set.endMin)}) [${cfg.label}]`}
-                          style={{position:'absolute',left:tleft(set.startMin),width:twidth(set.duration),top:'2px',bottom:'2px',
-                            background:set.inSched||set.pending?cfg.color:'#9ca3af',
-                            borderRadius:'4px',opacity:alpha,
-                            display:'flex',alignItems:'center',overflow:'hidden',padding:'0 4px',boxSizing:'border-box',cursor:'default',
-                            boxShadow:set.inSched?'0 1px 3px rgba(0,0,0,0.2)':'none'}}>
-                          <span style={{fontSize:'9px',color:'white',fontWeight:'800',whiteSpace:'nowrap',overflow:'hidden',textShadow:'0 1px 2px rgba(0,0,0,0.3)'}}>
-                            {set.inSched?short:''}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-            <div style={{display:'flex',gap:'14px',marginTop:'10px',paddingLeft:'80px',flexWrap:'wrap'}}>
-              {[1,2,3,4].map(t=>(<div key={t} style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'11px',color:C.textMid,fontWeight:'600'}}><div style={{width:'14px',height:'10px',borderRadius:'3px',background:TIER[t].color,boxShadow:'0 1px 2px rgba(0,0,0,0.15)'}}/>{TIER[t].label}</div>))}
-              <div style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'11px',color:C.textMid,fontWeight:'600'}}><div style={{width:'14px',height:'10px',borderRadius:'3px',background:TIER[1].color,opacity:0.5}}/>Pending</div>
-              <div style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'11px',color:C.textMid,fontWeight:'600'}}><div style={{width:'14px',height:'10px',borderRadius:'3px',background:'#9ca3af',opacity:0.4}}/>Skipped</div>
+            {[['VANS','OFF THE WALL'],['GHOST','BEATBOX'],['VERIZON','EAGLE']].map((pair,pi)=>(
+              <div key={pi} style={{marginBottom:'8px',background:C.inputBg,borderRadius:'8px',padding:'6px',border:`1px solid ${C.border}`}}>
+                {pair.map(stage=>{
+                  const sSets=allDisplay.filter(s=>s.stage===stage);
+                  return(
+                    <div key={stage} style={{display:'flex',alignItems:'center',marginBottom:'3px'}}>
+                      <div style={{width:'80px',flexShrink:0,fontSize:'10px',color:STAGE_COLOR[stage],fontWeight:'800',textAlign:'right',paddingRight:'8px',letterSpacing:'-0.3px'}}>{stage}</div>
+                      <div style={{flex:1,position:'relative',height:'26px',background:'#e5e7eb',borderRadius:'5px',overflow:'hidden',border:`1px solid ${C.border}`}}>
+                        {hrs.map(h=>(<div key={h} style={{position:'absolute',left:tleft(h*60),top:0,bottom:0,borderLeft:'1px solid #d1d5db',pointerEvents:'none'}}/>))}
+                        {sSets.map(set=>{
+                          const cfg=getTierConfig(set.tier);
+                          const short=set.band.length>14?set.band.slice(0,13)+'…':set.band;
+                          const alpha=set.inSched?1:set.pending?0.5:0.2;
+                          return(
+                            <div key={set.id+set.inSched}
+                              title={`${set.band} (${minToDisplay(set.startMin)}–${minToDisplay(set.endMin)}) [${cfg.label}]`}
+                              style={{position:'absolute',left:tleft(set.startMin),width:twidth(set.duration),top:'2px',bottom:'2px',
+                                background:set.inSched||set.pending?STAGE_COLOR[stage]:'#9ca3af',
+                                borderRadius:'4px',opacity:alpha,
+                                display:'flex',alignItems:'center',overflow:'hidden',padding:'0 4px',boxSizing:'border-box',cursor:'default',
+                                boxShadow:set.inSched?'0 1px 3px rgba(0,0,0,0.2)':'none'}}>
+                              <span style={{fontSize:'9px',color:'white',fontWeight:'800',whiteSpace:'nowrap',overflow:'hidden',textShadow:'0 1px 2px rgba(0,0,0,0.3)'}}>
+                                {set.inSched?short:''}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+            <div style={{display:'flex',gap:'12px',marginTop:'6px',paddingLeft:'88px',flexWrap:'wrap'}}>
+              {STAGES.map(s=>(<div key={s} style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'10px',color:C.textMid,fontWeight:'700'}}><div style={{width:'12px',height:'10px',borderRadius:'3px',background:STAGE_COLOR[s]}}/>{s}</div>))}
+              <div style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'10px',color:C.textMid,fontWeight:'600'}}><div style={{width:'12px',height:'10px',borderRadius:'3px',background:'#9ca3af',opacity:0.4}}/>Skipped</div>
             </div>
           </div>
         </div>
